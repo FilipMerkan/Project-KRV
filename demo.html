@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>zxcvbn Password Strength Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.1em;
+        }
+
+        .comparison-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 1200px) {
+            .comparison-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+            position: relative;
+        }
+
+        .container-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .container-header h2 {
+            color: #333;
+            font-size: 1.5em;
+            margin: 0;
+        }
+
+        .badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge.original {
+            background: #667eea;
+            color: white;
+        }
+
+        .badge.slovenian {
+            background: #00C851;
+            color: white;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+
+        .shared-input-section {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        input[type="password"],
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="password"]:focus,
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .show-password {
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .strength-meter {
+            margin: 20px 0;
+        }
+
+        .strength-bar {
+            height: 10px;
+            border-radius: 5px;
+            background: #e0e0e0;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .strength-fill {
+            height: 100%;
+            width: 0%;
+            transition: all 0.3s ease;
+            border-radius: 5px;
+        }
+
+        .strength-fill.weak { width: 20%; background: #ff4444; }
+        .strength-fill.fair { width: 40%; background: #ff8800; }
+        .strength-fill.good { width: 60%; background: #ffbb33; }
+        .strength-fill.strong { width: 80%; background: #00C851; }
+        .strength-fill.very-strong { width: 100%; background: #007E33; }
+
+        .strength-label {
+            font-weight: 600;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+
+        .strength-label.weak { color: #ff4444; }
+        .strength-label.fair { color: #ff8800; }
+        .strength-label.good { color: #ffbb33; }
+        .strength-label.strong { color: #00C851; }
+        .strength-label.very-strong { color: #007E33; }
+
+        .score-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 8px;
+        }
+
+        .info-item {
+            text-align: center;
+        }
+
+        .info-label {
+            font-size: 0.8em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            border-radius: 4px;
+        }
+
+        .feedback.warning {
+            background: #f8d7da;
+            border-left-color: #dc3545;
+        }
+
+        .feedback-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #856404;
+        }
+
+        .feedback.warning .feedback-title {
+            color: #721c24;
+        }
+
+        .suggestions {
+            margin-top: 10px;
+            padding-left: 20px;
+        }
+
+        .suggestions li {
+            margin: 5px 0;
+            color: #856404;
+        }
+
+        .feedback.warning .suggestions li {
+            color: #721c24;
+        }
+
+        .crack-times {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e7f3ff;
+            border-radius: 8px;
+        }
+
+        .crack-times h3 {
+            margin-bottom: 10px;
+            color: #004085;
+        }
+
+        .crack-time-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #b3d9ff;
+        }
+
+        .crack-time-item:last-child {
+            border-bottom: none;
+        }
+
+        .crack-time-label {
+            color: #004085;
+        }
+
+        .crack-time-value {
+            font-weight: 600;
+            color: #004085;
+        }
+
+        .examples {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+            margin-top: 30px;
+        }
+
+        .examples h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .example-btn {
+            display: inline-block;
+            margin: 5px;
+            padding: 8px 15px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background 0.3s;
+        }
+
+        .example-btn:hover {
+            background: #5568d3;
+        }
+
+        .slovenian-examples {
+            margin-top: 15px;
+        }
+
+        .slovenian-examples h4 {
+            color: #666;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="header">
+            <h1>zxcvbn Password Strength Comparison</h1>
+            <p class="subtitle">Side-by-side comparison: Original vs. Slovenian-Enhanced</p>
+        </div>
+
+        <div class="shared-input-section">
+            <div class="input-group">
+                <label for="password">Enter a password to test:</label>
+                <input type="password" id="password" placeholder="Type a password..." autocomplete="off">
+                <div class="show-password">
+                    <input type="checkbox" id="showPassword">
+                    <label for="showPassword">Show password</label>
+                </div>
+            </div>
+            <div class="input-group" style="margin-top: 15px; display: flex; align-items: center; gap: 15px;">
+                <label for="language" style="color: white; font-weight: 500;">Language / Jezik:</label>
+                <select id="language" style="padding: 8px 15px; border-radius: 8px; border: none; font-size: 1em; background: white; cursor: pointer; min-width: 150px;">
+                    <option value="en">English</option>
+                    <option value="sl">Slovenščina</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="comparison-container">
+            <!-- Original zxcvbn -->
+            <div class="container">
+                <div class="container-header">
+                    <h2>Original zxcvbn</h2>
+                    <span class="badge original">English Only</span>
+                </div>
+
+                <div id="results-original" style="display: none;">
+                    <div class="strength-meter">
+                        <div class="strength-label" id="strengthLabel-original">Enter a password</div>
+                        <div class="strength-bar">
+                            <div class="strength-fill" id="strengthFill-original"></div>
+                        </div>
+                    </div>
+
+                    <div class="score-info">
+                        <div class="info-item">
+                            <div class="info-label">Score</div>
+                            <div class="info-value" id="score-original">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Guesses (log10)</div>
+                            <div class="info-value" id="guessesLog10-original">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Calc Time</div>
+                            <div class="info-value" id="calcTime-original">-</div>
+                        </div>
+                    </div>
+
+                    <div id="feedback-original"></div>
+                    <div id="crackTimes-original"></div>
+                </div>
+            </div>
+
+            <!-- Slovenian-enhanced zxcvbn -->
+            <div class="container">
+                <div class="container-header">
+                    <h2>Slovenian-Enhanced zxcvbn</h2>
+                    <span class="badge slovenian">Slovenian Support</span>
+                </div>
+
+                <div id="results-slovenian" style="display: none;">
+                    <div class="strength-meter">
+                        <div class="strength-label" id="strengthLabel-slovenian">Enter a password</div>
+                        <div class="strength-bar">
+                            <div class="strength-fill" id="strengthFill-slovenian"></div>
+                        </div>
+                    </div>
+
+                    <div class="score-info">
+                        <div class="info-item">
+                            <div class="info-label">Score</div>
+                            <div class="info-value" id="score-slovenian">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Guesses (log10)</div>
+                            <div class="info-value" id="guessesLog10-slovenian">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Calc Time</div>
+                            <div class="info-value" id="calcTime-slovenian">-</div>
+                        </div>
+                    </div>
+
+                    <div id="feedback-slovenian"></div>
+                    <div id="crackTimes-slovenian"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="examples">
+            <h3>Try these examples:</h3>
+            <div style="margin-bottom: 10px;">
+                <strong>Words & Names:</strong>
+                <button class="example-btn" onclick="setPassword('geslo123')">geslo123</button>
+                <button class="example-btn" onclick="setPassword('ljubljana2024')">ljubljana2024</button>
+                <button class="example-btn" onclick="setPassword('filipmerkan')">filipmerkan</button>
+                <button class="example-btn" onclick="setPassword('slovenija')">slovenija</button>
+                <button class="example-btn" onclick="setPassword('slovenija2024')">slovenija2024</button>
+                <button class="example-btn" onclick="setPassword('geslo2024')">geslo2024</button>
+            </div>
+            <div style="margin-bottom: 10px;">
+                <strong>Keyboard Patterns:</strong>
+                <button class="example-btn" onclick="setPassword('qwertz')">qwertz</button>
+                <button class="example-btn" onclick="setPassword('asdfgh')">asdfgh</button>
+                <button class="example-btn" onclick="setPassword('yxcvbn')">yxcvbn</button>
+            </div>
+                <div>
+                    <strong>Dates & Leet Speak:</strong>
+                    <button class="example-btn" onclick="setPassword('25.06.1991')">25.06.1991</button>
+                    <button class="example-btn" onclick="setPassword('sl0v3n1j4')">sl0v3n1j4</button>
+                </div>
+        </div>
+    </div>
+
+    <script>
+        // We'll load both versions and compare them
+        let zxcvbnOriginal = null;
+        let zxcvbnSlovenian = null;
+        let bothLoaded = false;
+        
+        // Load original zxcvbn from CDN first
+        const scriptOriginal = document.createElement('script');
+        scriptOriginal.src = 'https://cdn.jsdelivr.net/npm/zxcvbn@4.4.2/dist/zxcvbn.js';
+        scriptOriginal.onload = function() {
+            zxcvbnOriginal = window.zxcvbn;
+            console.log('Original zxcvbn loaded');
+            checkAndInit();
+        };
+        document.head.appendChild(scriptOriginal);
+        
+        // Load Slovenian-enhanced version
+        const scriptSlovenian = document.createElement('script');
+        scriptSlovenian.src = 'zxcvbn/dist/zxcvbn.js';
+        scriptSlovenian.onload = function() {
+            // The Slovenian version has overwritten window.zxcvbn
+            zxcvbnSlovenian = window.zxcvbn;
+            console.log('Slovenian zxcvbn loaded');
+            // Restore original to window.zxcvbn for compatibility
+            window.zxcvbn = zxcvbnOriginal;
+            checkAndInit();
+        };
+        document.head.appendChild(scriptSlovenian);
+        
+        function checkAndInit() {
+            if (zxcvbnOriginal && zxcvbnSlovenian && !bothLoaded) {
+                bothLoaded = true;
+                console.log('Both versions loaded, initializing demo');
+                initDemo();
+            }
+        }
+        
+        function initDemo() {
+
+            const passwordInput = document.getElementById('password');
+            const showPasswordCheckbox = document.getElementById('showPassword');
+
+            const strengthLabels = ['Very Weak', 'Weak', 'Fair', 'Good', 'Strong', 'Very Strong'];
+            const strengthClasses = ['weak', 'fair', 'good', 'strong', 'very-strong'];
+
+            showPasswordCheckbox.addEventListener('change', function() {
+                passwordInput.type = this.checked ? 'text' : 'password';
+            });
+
+            const languageSelect = document.getElementById('language');
+            
+            function updateAnalysis() {
+                const password = passwordInput.value;
+                if (password.length === 0) {
+                    document.getElementById('results-original').style.display = 'none';
+                    document.getElementById('results-slovenian').style.display = 'none';
+                    return;
+                }
+
+                document.getElementById('results-original').style.display = 'block';
+                document.getElementById('results-slovenian').style.display = 'block';
+                
+                // Use original zxcvbn (from CDN, English only)
+                analyzePassword(password, 'original', zxcvbnOriginal);
+                
+                // Use Slovenian-enhanced version with selected language
+                analyzePassword(password, 'slovenian', zxcvbnSlovenian);
+            }
+
+            passwordInput.addEventListener('input', updateAnalysis);
+            languageSelect.addEventListener('change', updateAnalysis);
+
+            function setPassword(password) {
+                passwordInput.value = password;
+                passwordInput.dispatchEvent(new Event('input'));
+                passwordInput.focus();
+            }
+            
+            // Make setPassword available globally
+            window.setPassword = setPassword;
+
+            function analyzePassword(password, version, zxcvbnFn) {
+            // Get selected language for Slovenian version
+            const selectedLanguage = version === 'slovenian' ? languageSelect.value : 'en';
+            const result = zxcvbnFn(password, [], selectedLanguage);
+
+            // Update score
+            const score = result.score;
+            document.getElementById(`score-${version}`).textContent = `${score} / 4`;
+            document.getElementById(`guessesLog10-${version}`).textContent = result.guesses_log10.toFixed(2);
+            document.getElementById(`calcTime-${version}`).textContent = `${result.calc_time}ms`;
+            
+            // Debug: show which dictionaries were used
+            const dictMatches = result.sequence.filter(s => s.pattern === 'dictionary');
+            if (dictMatches.length > 0) {
+                const dictNames = dictMatches.map(s => s.dictionary_name || 'unknown').join(', ');
+                console.log(`${version} version - Password: "${password}", Dictionaries used: ${dictNames}`);
+            }
+
+            // Update strength meter
+            const strengthText = strengthLabels[score + 1] || 'Very Weak';
+            const strengthLabel = document.getElementById(`strengthLabel-${version}`);
+            const strengthFill = document.getElementById(`strengthFill-${version}`);
+            
+            strengthLabel.textContent = strengthText;
+            strengthLabel.className = 'strength-label ' + (strengthClasses[score] || 'weak');
+            strengthFill.className = 'strength-fill ' + (strengthClasses[score] || 'weak');
+
+            // Get language for translations in UI
+            const uiLang = version === 'slovenian' ? languageSelect.value : 'en';
+            const translations = {
+                en: {
+                    suggestions: 'Suggestions:',
+                    dictionary_matches: 'Dictionary matches:',
+                    none: 'None (treated as bruteforce/pattern)'
+                },
+                sl: {
+                    suggestions: 'Predlogi:',
+                    dictionary_matches: 'Ujemanje z slovarji:',
+                    none: 'Brez (obravnavano kot bruteforce/vzorec)'
+                }
+            };
+            const t = translations[uiLang] || translations.en;
+            
+            // Update feedback
+            let feedbackHTML = '';
+            if (result.feedback.warning || (result.feedback.suggestions && result.feedback.suggestions.length > 0)) {
+                const hasWarning = result.feedback.warning && result.feedback.warning.length > 0;
+                feedbackHTML = `
+                    <div class="feedback ${hasWarning ? 'warning' : ''}">
+                        ${result.feedback.warning ? `
+                            <div class="feedback-title"> ${result.feedback.warning}</div>
+                        ` : ''}
+                        ${result.feedback.suggestions && result.feedback.suggestions.length > 0 ? `
+                            <div class="suggestions">
+                                <strong>${t.suggestions}</strong>
+                                <ul>
+                                    ${result.feedback.suggestions.map(s => `<li>${s}</li>`).join('')}
+                                </ul>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }
+            
+            // Show which dictionaries were matched (this helps see the difference)
+            // dictMatches already declared above
+            if (dictMatches.length > 0) {
+                const dictNames = dictMatches.map(s => {
+                    const name = s.dictionary_name || 'unknown';
+                    const word = s.matched_word || s.token;
+                    return `${name} ("${word}")`;
+                }).join(', ');
+                feedbackHTML += `<div style="margin-top: 10px; padding: 8px; background: #e8f4f8; border-radius: 4px; font-size: 0.85em; color: #004085;">
+                    <strong>${t.dictionary_matches}</strong> ${dictNames}
+                </div>`;
+            } else {
+                feedbackHTML += `<div style="margin-top: 10px; padding: 8px; background: #f0f0f0; border-radius: 4px; font-size: 0.85em; color: #666;">
+                    <strong>${t.dictionary_matches}</strong> ${t.none}
+                </div>`;
+            }
+            
+            document.getElementById(`feedback-${version}`).innerHTML = feedbackHTML;
+
+            // Update crack times
+            const crackTimes = result.crack_times_display;
+            document.getElementById(`crackTimes-${version}`).innerHTML = `
+                <div class="crack-times">
+                    <h3>Estimated Crack Times</h3>
+                    <div class="crack-time-item">
+                        <span class="crack-time-label">Online (throttled, 100/hour):</span>
+                        <span class="crack-time-value">${crackTimes.online_throttling_100_per_hour}</span>
+                    </div>
+                    <div class="crack-time-item">
+                        <span class="crack-time-label">Online (unthrottled, 10/sec):</span>
+                        <span class="crack-time-value">${crackTimes.online_no_throttling_10_per_second}</span>
+                    </div>
+                    <div class="crack-time-item">
+                        <span class="crack-time-label">Offline (slow hash, 10k/sec):</span>
+                        <span class="crack-time-value">${crackTimes.offline_slow_hashing_1e4_per_second}</span>
+                    </div>
+                    <div class="crack-time-item">
+                        <span class="crack-time-label">Offline (fast hash, 10B/sec):</span>
+                        <span class="crack-time-value">${crackTimes.offline_fast_hashing_1e10_per_second}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+            // Analyze on page load if there's a password in the input
+            if (passwordInput.value) {
+                passwordInput.dispatchEvent(new Event('input'));
+            }
+        }
+    </script>
+</body>
+</html>
